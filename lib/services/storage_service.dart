@@ -1,0 +1,133 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/app_settings.dart';
+import '../models/zikr_item.dart';
+
+class StorageService {
+  static const _settingsKey = 'zikr_app_settings';
+  static const _zikrListKey = 'zikr_items_list';
+  static const _dailyHistoryKey = 'zikr_daily_history';
+
+  final SharedPreferences _prefs;
+
+  StorageService(this._prefs);
+
+  static Future<StorageService> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    return StorageService(prefs);
+  }
+
+  AppSettings loadSettings() {
+    final raw = _prefs.getString(_settingsKey);
+    if (raw == null) return const AppSettings();
+    try {
+      return AppSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return const AppSettings();
+    }
+  }
+
+  Future<void> saveSettings(AppSettings settings) async {
+    await _prefs.setString(_settingsKey, jsonEncode(settings.toJson()));
+  }
+
+  List<ZikrItem> loadZikrList() {
+    final raw = _prefs.getString(_zikrListKey);
+    if (raw == null) return ZikrItem.defaultList();
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      final list = decoded
+          .map((e) => ZikrItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+      if (list.isEmpty) return ZikrItem.defaultList();
+      final idx = list.indexWhere((e) => e.id == ZikrItem.masudFourZikr.id);
+      if (idx == -1) {
+        return [ZikrItem.masudFourZikr, ...list];
+      }
+      final existing = list[idx];
+      final updated = ZikrItem.masudFourZikr.copyWith(isEnabled: existing.isEnabled);
+      final others = list.where((e) => e.id != ZikrItem.masudFourZikr.id);
+      return [updated, ...others];
+    } catch (_) {
+      return ZikrItem.defaultList();
+    }
+  }
+
+  Future<void> saveZikrList(List<ZikrItem> items) async {
+    await _prefs.setString(
+      _zikrListKey,
+      jsonEncode(items.map((e) => e.toJson()).toList()),
+    );
+  }
+
+  Map<String, int> loadDailyHistory() {
+    final raw = _prefs.getString(_dailyHistoryKey);
+    if (raw == null) return {};
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      return decoded.map((k, v) => MapEntry(k, (v as num).toInt()));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  int loadTodayCount() {
+    final history = loadDailyHistory();
+    return history[dateKey(DateTime.now())] ?? 0;
+  }
+
+  Future<void> saveTodayCount(int count) async {
+    final history = loadDailyHistory();
+    history[dateKey(DateTime.now())] = count;
+    // Keep only the most recent 60 days.
+    if (history.length > 60) {
+      final sortedKeys = history.keys.toList()..sort();
+      for (final oldKey in sortedKeys.take(history.length - 60)) {
+        history.remove(oldKey);
+      }
+    }
+    await _prefs.setString(_dailyHistoryKey, jsonEncode(history));
+  }
+
+  static String dateKey(DateTime dt) {
+    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+
+  String exportBackupJson() {
+    return const JsonEncoder.withIndent('  ').convert({
+      'version': 1,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'settings': loadSettings().toJson(),
+      'zikrList': loadZikrList().map((e) => e.toJson()).toList(),
+      'history': loadDailyHistory(),
+    });
+  }
+
+  Future<bool> importBackupJson(String raw) async {
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      if (decoded['settings'] is Map<String, dynamic>) {
+        final s = AppSettings.fromJson(
+          decoded['settings'] as Map<String, dynamic>,
+        );
+        await saveSettings(s);
+      }
+      if (decoded['zikrList'] is List<dynamic>) {
+        final list = (decoded['zikrList'] as List<dynamic>)
+            .map((e) => ZikrItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+        if (list.isNotEmpty) {
+          await saveZikrList(list);
+        }
+      }
+      if (decoded['history'] is Map<String, dynamic>) {
+        final hist = (decoded['history'] as Map<String, dynamic>)
+            .map((k, v) => MapEntry(k, (v as num).toInt()));
+        await _prefs.setString(_dailyHistoryKey, jsonEncode(hist));
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+}
