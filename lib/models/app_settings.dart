@@ -21,6 +21,7 @@ class AppSettings {
   final bool darkMode;
   final bool largeFontMode;
   final double fontScale;
+  final String arabicFontFamily;
   final bool showRamadanCard;
   final String cityName;
   final double latitude;
@@ -57,6 +58,7 @@ class AppSettings {
     this.darkMode = false,
     this.largeFontMode = false,
     this.fontScale = 1.0,
+    this.arabicFontFamily = 'Lateef',
     this.showRamadanCard = true,
     this.cityName = 'ঢাকা (Dhaka)',
     this.latitude = 23.8103,
@@ -95,6 +97,7 @@ class AppSettings {
     bool? darkMode,
     bool? largeFontMode,
     double? fontScale,
+    String? arabicFontFamily,
     bool? showRamadanCard,
     String? cityName,
     double? latitude,
@@ -126,6 +129,7 @@ class AppSettings {
       darkMode: darkMode ?? this.darkMode,
       largeFontMode: largeFontMode ?? this.largeFontMode,
       fontScale: fontScale ?? this.fontScale,
+      arabicFontFamily: arabicFontFamily ?? this.arabicFontFamily,
       showRamadanCard: showRamadanCard ?? this.showRamadanCard,
       cityName: cityName ?? this.cityName,
       latitude: latitude ?? this.latitude,
@@ -156,6 +160,7 @@ class AppSettings {
         'darkMode': darkMode,
         'largeFontMode': largeFontMode,
         'fontScale': fontScale,
+        'arabicFontFamily': arabicFontFamily,
         'showRamadanCard': showRamadanCard,
         'cityName': cityName,
         'latitude': latitude,
@@ -195,6 +200,7 @@ class AppSettings {
       darkMode: (json['darkMode'] as bool?) ?? false,
       largeFontMode: (json['largeFontMode'] as bool?) ?? false,
       fontScale: (json['fontScale'] as num?)?.toDouble() ?? 1.0,
+      arabicFontFamily: (json['arabicFontFamily'] as String?) ?? 'Lateef',
       showRamadanCard: (json['showRamadanCard'] as bool?) ?? true,
       cityName: (json['cityName'] as String?) ?? 'ঢাকা (Dhaka)',
       latitude: (json['latitude'] as num?)?.toDouble() ?? 23.8103,

@@ -36,6 +36,11 @@ flutter:
     - assets/audio/
     - assets/icons/
   fonts:
+    - family: Lateef
+      fonts:
+        - asset: assets/fonts/Lateef-Regular.ttf
+        - asset: assets/fonts/Lateef-Bold.ttf
+          weight: 700
     - family: ScheherazadeNew
       fonts:
         - asset: assets/fonts/ScheherazadeNew-Regular.ttf

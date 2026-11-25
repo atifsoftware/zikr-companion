@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/surah_data.dart';
 import '../services/quran_player_service.dart';
+import '../services/zikr_scheduler_service.dart';
 import '../theme/app_theme.dart';
 
 class QuranRecitationScreen extends StatefulWidget {
@@ -392,6 +393,8 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
   }) {
     final ayahs = player.ayahs;
     final currentAyah = player.currentAyah;
+    final arabicFont =
+        context.watch<ZikrSchedulerService>().settings.arabicFontFamily;
     _syncAyahKeysAndScroll(ayahs.length, player.currentAyahIndex);
 
     return Column(
@@ -699,9 +702,9 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                                         ayah.arabic,
                                         textAlign: TextAlign.right,
                                         textDirection: TextDirection.rtl,
-                                        style: const TextStyle(
-                                          fontFamily: AppTheme.arabicFontFamily,
-                                          fontSize: 28,
+                                        style: TextStyle(
+                                          fontFamily: arabicFont,
+                                          fontSize: arabicFont == 'Lateef' ? 32 : 28,
                                           height: 1.95,
                                         ),
                                       ),

@@ -445,6 +445,43 @@ class SettingsScreen extends StatelessWidget {
                 settings.copyWith(showRamadanCard: val),
               ),
             ),
+            ListTile(
+              title: const Text('আরবি ফন্ট স্টাইল (Quran & Zikr)'),
+              subtitle: Text(
+                settings.arabicFontFamily == 'Lateef'
+                    ? 'ইন্দো-পাক / ছাপার কুরআন (Lateef)'
+                    : (settings.arabicFontFamily == 'Amiri'
+                        ? 'ক্লাসিক্যাল আমিরি (Amiri)'
+                        : 'মদীনা মুসহাফ (Scheherazade New)'),
+              ),
+              trailing: DropdownButton<String>(
+                value: ['Lateef', 'ScheherazadeNew', 'Amiri']
+                        .contains(settings.arabicFontFamily)
+                    ? settings.arabicFontFamily
+                    : 'Lateef',
+                items: const [
+                  DropdownMenuItem(
+                    value: 'Lateef',
+                    child: Text('ইন্দো-পাক (Lateef)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'ScheherazadeNew',
+                    child: Text('মদীনা (Scheherazade)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Amiri',
+                    child: Text('ক্লাসিক্যাল (Amiri)'),
+                  ),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    scheduler.updateSettings(
+                      settings.copyWith(arabicFontFamily: val),
+                    );
+                  }
+                },
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
