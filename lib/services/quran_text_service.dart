@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'arabic_to_bangla.dart';
 
 class AyahItem {
   final int numberInSurah;
@@ -133,7 +132,7 @@ class QuranTextService {
           arabic: arabicText,
           banglaTranslation: (banglaAyahs[i]['text'] as String).trim(),
           banglaTafsir: (tafsirAyahs[i]['text'] as String).trim(),
-          transliteration: ArabicToBangla.transliterate(arabicText),
+          transliteration: '',
           audioUrl: (audioAyahs[i]['audio'] as String? ?? '').trim(),
         );
       });

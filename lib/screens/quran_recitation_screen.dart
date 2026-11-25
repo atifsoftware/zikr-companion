@@ -16,7 +16,6 @@ class QuranRecitationScreen extends StatefulWidget {
 class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
-  bool _showTransliteration = true;
   bool _showTafsir = false;
   int _lastScrolledAyah = -1;
   List<GlobalKey> _ayahKeys = [];
@@ -236,10 +235,7 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                     color: Colors.white, size: 20),
                 tooltip: 'অপশন',
                 onSelected: (val) {
-                  if (val == 'translit') {
-                    setState(
-                        () => _showTransliteration = !_showTransliteration);
-                  } else if (val == 'tafsir') {
+                  if (val == 'tafsir') {
                     setState(() => _showTafsir = !_showTafsir);
                   } else if (val == 'qari') {
                     _openMobileQariPicker(context, player);
@@ -249,11 +245,6 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                   PopupMenuItem(
                     value: 'qari',
                     child: Text('ক্বারী: ${player.selectedQari.nameBangla}'),
-                  ),
-                  CheckedPopupMenuItem(
-                    value: 'translit',
-                    checked: _showTransliteration,
-                    child: const Text('উচ্চারণ দেখান'),
                   ),
                   CheckedPopupMenuItem(
                     value: 'tafsir',
@@ -624,14 +615,6 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('উচ্চারণ', style: TextStyle(fontSize: 12)),
-                    Switch(
-                      value: _showTransliteration,
-                      activeColor: AppTheme.emeraldPrimary,
-                      onChanged: (v) =>
-                          setState(() => _showTransliteration = v),
-                    ),
-                    const SizedBox(width: 8),
                     const Text('তাফসির / ব্যাখ্যা',
                         style: TextStyle(fontSize: 12)),
                     Switch(
@@ -725,19 +708,7 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                                     ),
                                   ],
                                 ),
-                                if (_showTransliteration &&
-                                    ayah.transliteration.isNotEmpty) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'উচ্চারণ: ${ayah.transliteration}',
-                                    style: const TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.emeraldLight,
-                                    ),
-                                  ),
-                                ],
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 8),
                                 Text(
                                   ayah.banglaTranslation,
                                   style: Theme.of(context)

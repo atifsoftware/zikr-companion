@@ -510,13 +510,28 @@ class _RamadanFastingCard extends StatelessWidget {
   }
 }
 
-class _DailyInspirationCard extends StatelessWidget {
+class _DailyInspirationCard extends StatefulWidget {
   final DailyInspiration inspiration;
 
   const _DailyInspirationCard({required this.inspiration});
 
   @override
+  State<_DailyInspirationCard> createState() => _DailyInspirationCardState();
+}
+
+class _DailyInspirationCardState extends State<_DailyInspirationCard> {
+  late int _currentIndex =
+      DailyInspiration.items.indexOf(widget.inspiration).clamp(0, DailyInspiration.items.length - 1);
+
+  void _nextInspiration() {
+    setState(() {
+      _currentIndex = (_currentIndex + 1) % DailyInspiration.items.length;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final inspiration = DailyInspiration.items[_currentIndex];
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -524,20 +539,37 @@ class _DailyInspirationCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.lightbulb_outline_rounded,
-                    color: AppTheme.goldAccent, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'আজকের বাণী (কুরআন ও হাদিস)',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                Row(
+                  children: [
+                    const Icon(Icons.lightbulb_outline_rounded,
+                        color: AppTheme.goldAccent, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'আজকের বাণী (কুরআন ও হাদিস)',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: _nextInspiration,
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: AppTheme.emeraldLight,
+                  ),
+                  icon: const Icon(Icons.refresh_rounded, size: 17),
+                  label: const Text(
+                    'অন্য বাণী',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               inspiration.arabic,
               textAlign: TextAlign.right,

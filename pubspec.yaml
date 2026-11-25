@@ -24,6 +24,7 @@ dependencies:
   path_provider: ^2.1.6
   file_picker: 8.1.7
   timezone: ^0.9.4
+  flutter_compass: ^0.8.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

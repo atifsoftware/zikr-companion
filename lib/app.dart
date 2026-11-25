@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'screens/dua_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/ibadah_guide_screen.dart';
 import 'screens/prayer_times_screen.dart';
 import 'screens/quran_recitation_screen.dart';
 import 'screens/settings_screen.dart';
@@ -37,6 +38,7 @@ class _ZikrAppState extends State<ZikrApp> {
       onBackToHome: () => setState(() => _selectedIndex = 0),
     ),
     const PrayerTimesScreen(),
+    const IbadahGuideScreen(),
     const SettingsScreen(),
   ];
 
@@ -47,6 +49,7 @@ class _ZikrAppState extends State<ZikrApp> {
     'মাসনূন দোয়া',
     'কুরআন তিলাওয়াত',
     'নামাজের সময়সূচি',
+    'ক্বিবলা ও আমল গাইড',
     'সেটিংস',
   ];
 
@@ -124,6 +127,11 @@ class _ZikrAppState extends State<ZikrApp> {
     final quranPlayer = context.watch<QuranPlayerService>();
     final isDark = scheduler.settings.darkMode;
     final isLargeFont = scheduler.settings.largeFontMode;
+    final effectiveScale = !isLargeFont
+        ? 1.0
+        : (scheduler.settings.fontScale <= 1.0
+            ? 1.22
+            : scheduler.settings.fontScale);
     final showMiniPlayer = quranPlayer.isActiveSession && _selectedIndex != 4;
 
     return MaterialApp(
@@ -137,7 +145,7 @@ class _ZikrAppState extends State<ZikrApp> {
         final mq = MediaQuery.of(context);
         return MediaQuery(
           data: mq.copyWith(
-            textScaler: TextScaler.linear(isLargeFont ? 1.22 : 1.0),
+            textScaler: TextScaler.linear(effectiveScale),
           ),
           child: child ?? const SizedBox.shrink(),
         );
@@ -209,16 +217,28 @@ class _ZikrAppState extends State<ZikrApp> {
                         ),
                       ),
                       IconButton(
-                        tooltip: 'সেটিংস',
+                        tooltip: 'ক্বিবলা ও গাইড',
                         icon: Icon(
                           _selectedIndex == 6
-                              ? Icons.settings_rounded
-                              : Icons.settings_outlined,
+                              ? Icons.explore_rounded
+                              : Icons.explore_outlined,
                           color: _selectedIndex == 6
                               ? AppTheme.emeraldLight
                               : null,
                         ),
                         onPressed: () => setState(() => _selectedIndex = 6),
+                      ),
+                      IconButton(
+                        tooltip: 'সেটিংস',
+                        icon: Icon(
+                          _selectedIndex == 7
+                              ? Icons.settings_rounded
+                              : Icons.settings_outlined,
+                          color: _selectedIndex == 7
+                              ? AppTheme.emeraldLight
+                              : null,
+                        ),
+                        onPressed: () => setState(() => _selectedIndex = 7),
                       ),
                       const SizedBox(width: 4),
                     ],
@@ -293,6 +313,11 @@ class _ZikrAppState extends State<ZikrApp> {
                         icon: Icon(Icons.access_time_outlined),
                         selectedIcon: Icon(Icons.access_time_filled),
                         label: Text('নামাজের সময়'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.explore_outlined),
+                        selectedIcon: Icon(Icons.explore_rounded),
+                        label: Text('ক্বিবলা ও গাইড'),
                       ),
                       NavigationRailDestination(
                         icon: Icon(Icons.settings_outlined),

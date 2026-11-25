@@ -105,8 +105,10 @@ class SettingsScreen extends StatelessWidget {
               title: const Text('প্রতিবার কতবার জিকির বলবে / পড়বে'),
               subtitle: Text('${settings.repeatCount} বার'),
               trailing: DropdownButton<int>(
-                value: settings.repeatCount,
-                items: const [1, 3, 5, 7, 10, 33]
+                value: [1, 2, 3, 4, 5, 7, 10, 33].contains(settings.repeatCount)
+                    ? settings.repeatCount
+                    : 3,
+                items: const [1, 2, 3, 4, 5, 7, 10, 33]
                     .map((v) => DropdownMenuItem(value: v, child: Text('$v বার')))
                     .toList(),
                 onChanged: (val) {
@@ -400,14 +402,41 @@ class SettingsScreen extends StatelessWidget {
             ),
             SwitchListTile(
               title: const Text('বড় ফন্ট মোড (সহজ পাঠের জন্য)'),
-              subtitle:
-                  const Text('বয়স্ক ও চোখের আরামের জন্য লেখা ২২% বড় দেখাবে'),
+              subtitle: const Text('চালু করে নিচের স্লাইডার দিয়ে সাইজ ঠিক করুন'),
               value: settings.largeFontMode,
               activeColor: AppTheme.emeraldPrimary,
               onChanged: (val) => scheduler.updateSettings(
-                settings.copyWith(largeFontMode: val),
+                settings.copyWith(
+                  largeFontMode: val,
+                  fontScale: val
+                      ? (settings.fontScale <= 1.0 ? 1.22 : settings.fontScale)
+                      : 1.0,
+                ),
               ),
             ),
+            if (settings.largeFontMode)
+              ListTile(
+                title: const Text('ফন্ট সাইজ কাস্টমাইজ করুন'),
+                subtitle: Text(
+                  '${((settings.fontScale <= 1.0 ? 1.22 : settings.fontScale) * 100).round()}%',
+                ),
+                trailing: SizedBox(
+                  width: 180,
+                  child: Slider(
+                    value: (settings.fontScale <= 1.0 ? 1.22 : settings.fontScale)
+                        .clamp(1.05, 1.5),
+                    min: 1.05,
+                    max: 1.5,
+                    divisions: 9,
+                    label:
+                        '${((settings.fontScale <= 1.0 ? 1.22 : settings.fontScale) * 100).round()}%',
+                    activeColor: AppTheme.emeraldPrimary,
+                    onChanged: (val) => scheduler.updateSettings(
+                      settings.copyWith(fontScale: val),
+                    ),
+                  ),
+                ),
+              ),
             SwitchListTile(
               title: const Text('হোম পেজে সেহরি ও ইফতার কার্ড দেখান'),
               value: settings.showRamadanCard,

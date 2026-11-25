@@ -20,6 +20,7 @@ class AppSettings {
   final bool minimizeToTrayOnClose;
   final bool darkMode;
   final bool largeFontMode;
+  final double fontScale;
   final bool showRamadanCard;
   final String cityName;
   final double latitude;
@@ -55,6 +56,7 @@ class AppSettings {
     this.minimizeToTrayOnClose = true,
     this.darkMode = false,
     this.largeFontMode = false,
+    this.fontScale = 1.0,
     this.showRamadanCard = true,
     this.cityName = 'ঢাকা (Dhaka)',
     this.latitude = 23.8103,
@@ -92,6 +94,7 @@ class AppSettings {
     bool? minimizeToTrayOnClose,
     bool? darkMode,
     bool? largeFontMode,
+    double? fontScale,
     bool? showRamadanCard,
     String? cityName,
     double? latitude,
@@ -122,6 +125,7 @@ class AppSettings {
           minimizeToTrayOnClose ?? this.minimizeToTrayOnClose,
       darkMode: darkMode ?? this.darkMode,
       largeFontMode: largeFontMode ?? this.largeFontMode,
+      fontScale: fontScale ?? this.fontScale,
       showRamadanCard: showRamadanCard ?? this.showRamadanCard,
       cityName: cityName ?? this.cityName,
       latitude: latitude ?? this.latitude,
@@ -151,6 +155,7 @@ class AppSettings {
         'minimizeToTrayOnClose': minimizeToTrayOnClose,
         'darkMode': darkMode,
         'largeFontMode': largeFontMode,
+        'fontScale': fontScale,
         'showRamadanCard': showRamadanCard,
         'cityName': cityName,
         'latitude': latitude,
@@ -189,6 +194,7 @@ class AppSettings {
           (json['minimizeToTrayOnClose'] as bool?) ?? true,
       darkMode: (json['darkMode'] as bool?) ?? false,
       largeFontMode: (json['largeFontMode'] as bool?) ?? false,
+      fontScale: (json['fontScale'] as num?)?.toDouble() ?? 1.0,
       showRamadanCard: (json['showRamadanCard'] as bool?) ?? true,
       cityName: (json['cityName'] as String?) ?? 'ঢাকা (Dhaka)',
       latitude: (json['latitude'] as num?)?.toDouble() ?? 23.8103,
