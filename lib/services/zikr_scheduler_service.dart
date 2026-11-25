@@ -71,6 +71,9 @@ class ZikrSchedulerService extends ChangeNotifier {
   List<ZikrItem> get enabledZikrList =>
       _zikrList.where((z) => z.isEnabled).toList();
 
+  int effectiveRepeatFor(ZikrItem item) =>
+      item.repeatCount ?? _settings.repeatCount;
+
   List<DailyZikrStat> get last7DaysStats {
     final now = DateTime.now();
     return List.generate(7, (i) {
@@ -205,9 +208,10 @@ class ZikrSchedulerService extends ChangeNotifier {
         if (pause.isPaused) continue;
 
         final item = enabled[(i - 1) % enabled.length];
+        final repeat = effectiveRepeatFor(item);
         await _notifications.zonedSchedule(
           2000 + i,
-          '${item.banglaPronunciation} (${_settings.repeatCount} বার)',
+          '${item.banglaPronunciation} ($repeat বার)',
           '${item.arabic} — ${item.banglaMeaning}',
           tz.TZDateTime.from(target, tz.local),
           details,
@@ -328,15 +332,16 @@ class ZikrSchedulerService extends ChangeNotifier {
     final item = enabled[_currentIndex];
     _currentIndex = (_currentIndex + 1) % enabled.length;
 
+    final targetRepeat = effectiveRepeatFor(item);
     _activeReminder = item;
     _currentZikr = item;
     _reminderProgress = 0;
     _rescheduleNext();
-    _showSystemNotification(item);
+    _showSystemNotification(item, targetRepeat);
     if (_settings.voiceEnabled) {
       _voiceService.speakZikr(
         item,
-        repeatCount: _settings.repeatCount,
+        repeatCount: targetRepeat,
         speechRate: _settings.speechRate,
         onRepetitionDone: (completed) {
           _reminderProgress = completed;
@@ -350,7 +355,7 @@ class ZikrSchedulerService extends ChangeNotifier {
       );
     }
     if (_settings.showReminderPopup) {
-      onReminderTriggered?.call(item, _settings.repeatCount);
+      onReminderTriggered?.call(item, targetRepeat);
     }
     notifyListeners();
   }
@@ -384,7 +389,7 @@ class ZikrSchedulerService extends ChangeNotifier {
     await _voiceService.stop();
   }
 
-  Future<void> _showSystemNotification(ZikrItem item) async {
+  Future<void> _showSystemNotification(ZikrItem item, int repeat) async {
     if (!_notificationsInitialized || kIsWeb) return;
     if (Platform.isWindows) return;
 
@@ -402,7 +407,7 @@ class ZikrSchedulerService extends ChangeNotifier {
       );
       await _notifications.show(
         1001,
-        '${item.banglaPronunciation} (${_settings.repeatCount} বার)',
+        '${item.banglaPronunciation} ($repeat বার)',
         '${item.arabic} — ${item.banglaMeaning}',
         details,
       );
@@ -467,6 +472,20 @@ class ZikrSchedulerService extends ChangeNotifier {
             item.id == id ? item.copyWith(isEnabled: !item.isEnabled) : item)
         .toList();
     await _storage.saveZikrList(_zikrList);
+    await _scheduleBackgroundReminders();
+    notifyListeners();
+  }
+
+  Future<void> updateZikrRepeatCount(String id, int? repeatCount) async {
+    _zikrList = _zikrList
+        .map((item) => item.id == id
+            ? (repeatCount == null
+                ? item.copyWith(clearRepeatCount: true)
+                : item.copyWith(repeatCount: repeatCount))
+            : item)
+        .toList();
+    await _storage.saveZikrList(_zikrList);
+    await _scheduleBackgroundReminders();
     notifyListeners();
   }
 

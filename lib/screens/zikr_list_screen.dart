@@ -202,6 +202,7 @@ class ZikrListScreen extends StatelessWidget {
                     ),
                   ),
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -226,6 +227,36 @@ class ZikrListScreen extends StatelessWidget {
                                 scheduler.toggleZikrEnabled(item.id),
                           ),
                         ],
+                      ),
+                      DropdownButton<int>(
+                        value: item.repeatCount ?? 0,
+                        isDense: true,
+                        underline: const SizedBox.shrink(),
+                        items: [
+                          DropdownMenuItem(
+                            value: 0,
+                            child: Text(
+                              'ডিফল্ট (${scheduler.settings.repeatCount})',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          ...[1, 2, 3, 4, 5, 7, 10, 33].map(
+                            (v) => DropdownMenuItem(
+                              value: v,
+                              child: Text(
+                                '$v বার',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val == null) return;
+                          scheduler.updateZikrRepeatCount(
+                            item.id,
+                            val == 0 ? null : val,
+                          );
+                        },
                       ),
                       if (item.isCustom)
                         IconButton(

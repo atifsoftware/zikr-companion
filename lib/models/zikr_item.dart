@@ -6,6 +6,7 @@ class ZikrItem {
   final String banglaMeaning;
   final String virtue;
   final String customAudioPath;
+  final int? repeatCount;
   final bool isEnabled;
   final bool isCustom;
 
@@ -17,6 +18,7 @@ class ZikrItem {
     required this.banglaMeaning,
     this.virtue = '',
     this.customAudioPath = '',
+    this.repeatCount,
     this.isEnabled = true,
     this.isCustom = false,
   });
@@ -29,6 +31,8 @@ class ZikrItem {
     String? banglaMeaning,
     String? virtue,
     String? customAudioPath,
+    int? repeatCount,
+    bool clearRepeatCount = false,
     bool? isEnabled,
     bool? isCustom,
   }) {
@@ -40,6 +44,8 @@ class ZikrItem {
       banglaMeaning: banglaMeaning ?? this.banglaMeaning,
       virtue: virtue ?? this.virtue,
       customAudioPath: customAudioPath ?? this.customAudioPath,
+      repeatCount:
+          clearRepeatCount ? null : (repeatCount ?? this.repeatCount),
       isEnabled: isEnabled ?? this.isEnabled,
       isCustom: isCustom ?? this.isCustom,
     );
@@ -53,6 +59,7 @@ class ZikrItem {
         'banglaMeaning': banglaMeaning,
         'virtue': virtue,
         'customAudioPath': customAudioPath,
+        'repeatCount': repeatCount,
         'isEnabled': isEnabled,
         'isCustom': isCustom,
       };
@@ -65,6 +72,7 @@ class ZikrItem {
         banglaMeaning: json['banglaMeaning'] as String,
         virtue: (json['virtue'] as String?) ?? '',
         customAudioPath: (json['customAudioPath'] as String?) ?? '',
+        repeatCount: json['repeatCount'] as int?,
         isEnabled: (json['isEnabled'] as bool?) ?? true,
         isCustom: (json['isCustom'] as bool?) ?? false,
       );
@@ -77,6 +85,7 @@ class ZikrItem {
     banglaMeaning:
         'সকল প্রশংসা বিশ্বজগতের প্রতিপালক আল্লাহর জন্য, যিনি পরম করুণাময় ও দয়ালু।',
     virtue: 'কুরআনের সর্বশ্রেষ্ঠ সূরা ও শিফা (আরোগ্য)।',
+    repeatCount: 1,
   );
 
   static List<ZikrItem> defaultList() => const [
