@@ -729,10 +729,10 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                                     ayah.transliteration.isNotEmpty) ...[
                                   const SizedBox(height: 8),
                                   Text(
-                                    ayah.transliteration,
+                                    'উচ্চারণ: ${ayah.transliteration}',
                                     style: const TextStyle(
-                                      fontSize: 13,
-                                      fontStyle: FontStyle.italic,
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
                                       color: AppTheme.emeraldLight,
                                     ),
                                   ),

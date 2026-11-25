@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'arabic_to_bangla.dart';
 
 class AyahItem {
   final int numberInSurah;
@@ -99,7 +100,7 @@ class QuranTextService {
     } catch (_) {}
 
     final uri = Uri.parse(
-      'https://api.alquran.cloud/v1/surah/$surahNumber/editions/quran-uthmani,bn.bengali,bn.hoque,en.transliteration,$qariId',
+      'https://api.alquran.cloud/v1/surah/$surahNumber/editions/quran-uthmani,bn.bengali,bn.hoque,$qariId',
     );
     final client = HttpClient();
     try {
@@ -122,18 +123,17 @@ class QuranTextService {
           (editions[1]['ayahs'] as List<dynamic>).cast<Map<String, dynamic>>();
       final tafsirAyahs =
           (editions[2]['ayahs'] as List<dynamic>).cast<Map<String, dynamic>>();
-      final translitAyahs =
-          (editions[3]['ayahs'] as List<dynamic>).cast<Map<String, dynamic>>();
       final audioAyahs =
-          (editions[4]['ayahs'] as List<dynamic>).cast<Map<String, dynamic>>();
+          (editions[3]['ayahs'] as List<dynamic>).cast<Map<String, dynamic>>();
 
       final items = List.generate(arabicAyahs.length, (i) {
+        final arabicText = (arabicAyahs[i]['text'] as String).trim();
         return AyahItem(
           numberInSurah: arabicAyahs[i]['numberInSurah'] as int,
-          arabic: (arabicAyahs[i]['text'] as String).trim(),
+          arabic: arabicText,
           banglaTranslation: (banglaAyahs[i]['text'] as String).trim(),
           banglaTafsir: (tafsirAyahs[i]['text'] as String).trim(),
-          transliteration: (translitAyahs[i]['text'] as String).trim(),
+          transliteration: ArabicToBangla.transliterate(arabicText),
           audioUrl: (audioAyahs[i]['audio'] as String? ?? '').trim(),
         );
       });

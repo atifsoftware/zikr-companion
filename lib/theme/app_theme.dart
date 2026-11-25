@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const String arabicFontFamily = 'Amiri';
+  static const String arabicFontFamily = 'ScheherazadeNew';
   static const String banglaFontFamily = 'HindSiliguri';
   static const String banglaSerifFontFamily = 'TiroBangla';
 

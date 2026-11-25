@@ -4,6 +4,7 @@ import 'package:zikr/models/daily_inspiration.dart';
 import 'package:zikr/models/surah_data.dart';
 import 'package:zikr/models/zikr_item.dart';
 import 'package:zikr/screens/dua_screen.dart';
+import 'package:zikr/services/arabic_to_bangla.dart';
 import 'package:zikr/services/hijri_service.dart';
 import 'package:zikr/services/prayer_service.dart';
 
@@ -74,5 +75,9 @@ void main() {
     );
     expect(sehriIftar.sehriEnd.isBefore(sehriIftar.iftarTime), isTrue);
     expect(DailyInspiration.forDate(now).bangla, isNotEmpty);
+
+    final bn = ArabicToBangla.transliterate('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ');
+    expect(bn, isNotEmpty);
+    expect(RegExp(r'[a-zA-Z]').hasMatch(bn), isFalse);
   });
 }
