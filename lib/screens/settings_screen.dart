@@ -485,6 +485,8 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
+        _CloudSyncCard(scheduler: scheduler),
+        const SizedBox(height: 16),
         _SectionCard(
           title: 'ব্যাকআপ ও রিস্টোর (Backup & Restore)',
           children: [
@@ -512,6 +514,100 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+class _CloudSyncCard extends StatefulWidget {
+  final ZikrSchedulerService scheduler;
+  const _CloudSyncCard({required this.scheduler});
+
+  @override
+  State<_CloudSyncCard> createState() => _CloudSyncCardState();
+}
+
+class _CloudSyncCardState extends State<_CloudSyncCard> {
+  late final TextEditingController _urlCtrl = TextEditingController(
+    text: widget.scheduler.settings.serverUrl,
+  );
+  bool _syncing = false;
+
+  @override
+  void dispose() {
+    _urlCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _syncNow() async {
+    if (_urlCtrl.text.trim().isEmpty || _syncing) return;
+    setState(() => _syncing = true);
+    try {
+      final added = await widget.scheduler.syncFromServer(_urlCtrl.text);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              added > 0
+                  ? '$added টি নতুন জিকির ও অডিও সিঙ্ক হয়েছে!'
+                  : 'সিঙ্ক সম্পন্ন হয়েছে (সবগুলো আপডেটেড)।',
+            ),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('সার্ভারের সাথে সংযোগ করা যায়নি — URL পরীক্ষা করুন।'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'ওয়েবসাইট ও ক্লাউড সিঙ্ক (cPanel API)',
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _urlCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'আপনার ওয়েবসাইটের URL',
+                  hintText: 'https://zikr.yourdomain.com',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: _syncing ? null : _syncNow,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.emeraldPrimary,
+                  foregroundColor: Colors.white,
+                ),
+                icon: _syncing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.sync_rounded),
+                label: Text(_syncing ? 'সিঙ্ক হচ্ছে...' : 'এখনই সিঙ্ক করুন'),
+              ),
+            ],
+          ),
         ),
       ],
     );

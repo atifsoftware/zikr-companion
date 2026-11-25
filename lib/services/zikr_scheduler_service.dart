@@ -9,6 +9,7 @@ import '../models/zikr_item.dart';
 import 'desktop_tray_service.dart';
 import 'hijri_service.dart';
 import 'prayer_service.dart';
+import 'remote_sync_service.dart';
 import 'storage_service.dart';
 import 'zikr_voice_service.dart';
 
@@ -446,6 +447,24 @@ class ZikrSchedulerService extends ChangeNotifier {
   }
 
   String exportBackupJson() => _storage.exportBackupJson();
+
+  Future<int> syncFromServer(String url) async {
+    final clean = url.trim();
+    await updateSettings(_settings.copyWith(serverUrl: clean));
+    final remoteItems = await RemoteSyncService().fetchAndCacheZikrs(clean);
+    if (remoteItems.isEmpty) return 0;
+
+    final existingIds = _zikrList.map((e) => e.id).toSet();
+    final newItems =
+        remoteItems.where((r) => !existingIds.contains(r.id)).toList();
+    if (newItems.isNotEmpty) {
+      _zikrList = [..._zikrList, ...newItems];
+      await _storage.saveZikrList(_zikrList);
+      await _scheduleBackgroundReminders();
+      notifyListeners();
+    }
+    return newItems.length;
+  }
 
   Future<bool> importBackupJson(String raw) async {
     final ok = await _storage.importBackupJson(raw);

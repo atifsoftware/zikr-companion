@@ -24,6 +24,7 @@ class AppSettings {
   final String arabicFontFamily;
   final bool showRamadanCard;
   final String cityName;
+  final String serverUrl;
   final double latitude;
   final double longitude;
 
@@ -61,6 +62,7 @@ class AppSettings {
     this.arabicFontFamily = 'Lateef',
     this.showRamadanCard = true,
     this.cityName = 'ঢাকা (Dhaka)',
+    this.serverUrl = '',
     this.latitude = 23.8103,
     this.longitude = 90.4125,
   });
@@ -100,6 +102,7 @@ class AppSettings {
     String? arabicFontFamily,
     bool? showRamadanCard,
     String? cityName,
+    String? serverUrl,
     double? latitude,
     double? longitude,
   }) {
@@ -132,6 +135,7 @@ class AppSettings {
       arabicFontFamily: arabicFontFamily ?? this.arabicFontFamily,
       showRamadanCard: showRamadanCard ?? this.showRamadanCard,
       cityName: cityName ?? this.cityName,
+      serverUrl: serverUrl ?? this.serverUrl,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
     );
@@ -163,6 +167,7 @@ class AppSettings {
         'arabicFontFamily': arabicFontFamily,
         'showRamadanCard': showRamadanCard,
         'cityName': cityName,
+        'serverUrl': serverUrl,
         'latitude': latitude,
         'longitude': longitude,
       };
@@ -203,6 +208,7 @@ class AppSettings {
       arabicFontFamily: (json['arabicFontFamily'] as String?) ?? 'Lateef',
       showRamadanCard: (json['showRamadanCard'] as bool?) ?? true,
       cityName: (json['cityName'] as String?) ?? 'ঢাকা (Dhaka)',
+      serverUrl: (json['serverUrl'] as String?) ?? '',
       latitude: (json['latitude'] as num?)?.toDouble() ?? 23.8103,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 90.4125,
     );
