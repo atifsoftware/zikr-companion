@@ -155,4 +155,22 @@ class PrayerService {
     );
     return tomorrowSlots.first;
   }
+
+  ({DateTime sehriEnd, DateTime iftarTime}) getSehriAndIftarTimes({
+    required double latitude,
+    required double longitude,
+    DateTime? date,
+    bool useCustomTimes = false,
+    Map<String, String> customTimes = const {},
+  }) {
+    final slots = getPrayerTimesForDate(
+      latitude: latitude,
+      longitude: longitude,
+      date: date,
+      useCustomTimes: useCustomTimes,
+      customTimes: customTimes,
+    );
+    // Fajr is slots[0], Maghrib is slots[3].
+    return (sehriEnd: slots[0].startTime, iftarTime: slots[3].startTime);
+  }
 }

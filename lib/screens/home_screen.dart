@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
+import '../models/daily_inspiration.dart';
 import '../services/zikr_scheduler_service.dart';
 import '../theme/app_theme.dart';
 
@@ -123,6 +124,15 @@ class HomeScreen extends StatelessWidget {
         if (onNavigateTab != null) ...[
           const SizedBox(height: 14),
           _QuickActionsRow(onNavigateTab: onNavigateTab!),
+        ],
+        if (settings.showRamadanCard) ...[
+          const SizedBox(height: 14),
+          _RamadanFastingCard(
+            sehriEnd: scheduler.todaySehriIftar.sehriEnd,
+            iftarTime: scheduler.todaySehriIftar.iftarTime,
+            isRamadanMonth: hijri.month == 9,
+            formatDuration: _formatDuration,
+          ),
         ],
         if (islamicReminders.isNotEmpty) ...[
           const SizedBox(height: 14),
@@ -365,7 +375,200 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 16),
+        _DailyInspirationCard(
+          inspiration: DailyInspiration.forDate(DateTime.now()),
+        ),
       ],
+    );
+  }
+}
+
+class _RamadanFastingCard extends StatelessWidget {
+  final DateTime sehriEnd;
+  final DateTime iftarTime;
+  final bool isRamadanMonth;
+  final String Function(Duration) formatDuration;
+
+  const _RamadanFastingCard({
+    required this.sehriEnd,
+    required this.iftarTime,
+    required this.isRamadanMonth,
+    required this.formatDuration,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    String countdownText;
+    if (now.isBefore(sehriEnd)) {
+      countdownText =
+          'সেহরির শেষ সময় হতে বাকি: ${formatDuration(sehriEnd.difference(now))}';
+    } else if (now.isBefore(iftarTime)) {
+      countdownText =
+          'ইফতারের সময় হতে বাকি: ${formatDuration(iftarTime.difference(now))}';
+    } else {
+      countdownText = 'আজকের ইফতার সম্পন্ন হয়েছে';
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.nightlight_round,
+                        color: AppTheme.goldAccent, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      isRamadanMonth
+                          ? 'মাহে রমজান — সেহরি ও ইফতার'
+                          : 'রোজা ও সেহরি-ইফতার সময়সূচি',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.emeraldPrimary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('সেহরির শেষ সময়',
+                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat.jm().format(sehriEnd),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.emeraldLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.goldAccent.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('ইফতারের সময়',
+                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat.jm().format(iftarTime),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFB8860B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              countdownText,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.emeraldLight,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyInspirationCard extends StatelessWidget {
+  final DailyInspiration inspiration;
+
+  const _DailyInspirationCard({required this.inspiration});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.lightbulb_outline_rounded,
+                    color: AppTheme.goldAccent, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'আজকের বাণী (কুরআন ও হাদিস)',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              inspiration.arabic,
+              textAlign: TextAlign.right,
+              textDirection: TextDirection.rtl,
+              style: const TextStyle(
+                fontFamily: AppTheme.arabicFontFamily,
+                fontSize: 22,
+                height: 1.8,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              inspiration.bangla,
+              style: const TextStyle(
+                fontFamily: AppTheme.banglaSerifFontFamily,
+                fontSize: 15,
+                height: 1.55,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '— ${inspiration.reference}',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.emeraldLight,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

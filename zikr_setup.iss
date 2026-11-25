@@ -1,11 +1,11 @@
 [Setup]
 AppName=জিকির (Zikr)
-AppVersion=1.0.0
+AppVersion=1.1.0
 AppPublisher=Zikr Islamic Reminder
 DefaultDirName={autopf}\Zikr
 DefaultGroupName=Zikr
 OutputDir=e:\ZIKR\build\installer
-OutputBaseFilename=Zikr_Setup_v1.0
+OutputBaseFilename=Zikr_Setup_v1.1
 SetupIconFile=e:\ZIKR\windows\runner\resources\app_icon.ico
 Compression=lzma2
 SolidCompression=yes

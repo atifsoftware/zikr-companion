@@ -388,7 +388,7 @@ class SettingsScreen extends StatelessWidget {
         ],
         const SizedBox(height: 16),
         _SectionCard(
-          title: 'অ্যাপিয়ারেন্স (থিম)',
+          title: 'অ্যাপিয়ারেন্স ও সহজ পাঠ (Display)',
           children: [
             SwitchListTile(
               title: const Text('ডার্ক মোড (Dark Mode)'),
@@ -396,6 +396,24 @@ class SettingsScreen extends StatelessWidget {
               activeColor: AppTheme.emeraldPrimary,
               onChanged: (val) => scheduler.updateSettings(
                 settings.copyWith(darkMode: val),
+              ),
+            ),
+            SwitchListTile(
+              title: const Text('বড় ফন্ট মোড (সহজ পাঠের জন্য)'),
+              subtitle:
+                  const Text('বয়স্ক ও চোখের আরামের জন্য লেখা ২২% বড় দেখাবে'),
+              value: settings.largeFontMode,
+              activeColor: AppTheme.emeraldPrimary,
+              onChanged: (val) => scheduler.updateSettings(
+                settings.copyWith(largeFontMode: val),
+              ),
+            ),
+            SwitchListTile(
+              title: const Text('হোম পেজে সেহরি ও ইফতার কার্ড দেখান'),
+              value: settings.showRamadanCard,
+              activeColor: AppTheme.emeraldPrimary,
+              onChanged: (val) => scheduler.updateSettings(
+                settings.copyWith(showRamadanCard: val),
               ),
             ),
           ],

@@ -123,6 +123,7 @@ class _ZikrAppState extends State<ZikrApp> {
     final scheduler = context.watch<ZikrSchedulerService>();
     final quranPlayer = context.watch<QuranPlayerService>();
     final isDark = scheduler.settings.darkMode;
+    final isLargeFont = scheduler.settings.largeFontMode;
     final showMiniPlayer = quranPlayer.isActiveSession && _selectedIndex != 4;
 
     return MaterialApp(
@@ -132,6 +133,15 @@ class _ZikrAppState extends State<ZikrApp> {
       theme: AppTheme.lightTheme(),
       darkTheme: AppTheme.darkTheme(),
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: TextScaler.linear(isLargeFont ? 1.22 : 1.0),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: CallbackShortcuts(
         bindings: <ShortcutActivator, VoidCallback>{
           const SingleActivator(

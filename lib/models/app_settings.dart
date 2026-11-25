@@ -19,6 +19,8 @@ class AppSettings {
   final bool launchAtStartup;
   final bool minimizeToTrayOnClose;
   final bool darkMode;
+  final bool largeFontMode;
+  final bool showRamadanCard;
   final String cityName;
   final double latitude;
   final double longitude;
@@ -52,6 +54,8 @@ class AppSettings {
     this.launchAtStartup = true,
     this.minimizeToTrayOnClose = true,
     this.darkMode = false,
+    this.largeFontMode = false,
+    this.showRamadanCard = true,
     this.cityName = 'ঢাকা (Dhaka)',
     this.latitude = 23.8103,
     this.longitude = 90.4125,
@@ -87,6 +91,8 @@ class AppSettings {
     bool? launchAtStartup,
     bool? minimizeToTrayOnClose,
     bool? darkMode,
+    bool? largeFontMode,
+    bool? showRamadanCard,
     String? cityName,
     double? latitude,
     double? longitude,
@@ -115,6 +121,8 @@ class AppSettings {
       minimizeToTrayOnClose:
           minimizeToTrayOnClose ?? this.minimizeToTrayOnClose,
       darkMode: darkMode ?? this.darkMode,
+      largeFontMode: largeFontMode ?? this.largeFontMode,
+      showRamadanCard: showRamadanCard ?? this.showRamadanCard,
       cityName: cityName ?? this.cityName,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
@@ -142,6 +150,8 @@ class AppSettings {
         'launchAtStartup': launchAtStartup,
         'minimizeToTrayOnClose': minimizeToTrayOnClose,
         'darkMode': darkMode,
+        'largeFontMode': largeFontMode,
+        'showRamadanCard': showRamadanCard,
         'cityName': cityName,
         'latitude': latitude,
         'longitude': longitude,
@@ -178,6 +188,8 @@ class AppSettings {
       minimizeToTrayOnClose:
           (json['minimizeToTrayOnClose'] as bool?) ?? true,
       darkMode: (json['darkMode'] as bool?) ?? false,
+      largeFontMode: (json['largeFontMode'] as bool?) ?? false,
+      showRamadanCard: (json['showRamadanCard'] as bool?) ?? true,
       cityName: (json['cityName'] as String?) ?? 'ঢাকা (Dhaka)',
       latitude: (json['latitude'] as num?)?.toDouble() ?? 23.8103,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 90.4125,

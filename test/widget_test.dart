@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zikr/models/app_settings.dart';
+import 'package:zikr/models/daily_inspiration.dart';
 import 'package:zikr/models/surah_data.dart';
 import 'package:zikr/models/zikr_item.dart';
 import 'package:zikr/screens/dua_screen.dart';
@@ -65,5 +66,13 @@ void main() {
     );
     expect(customSlots[1].startTime.hour, 13);
     expect(customSlots[1].startTime.minute, 30);
+
+    final sehriIftar = service.getSehriAndIftarTimes(
+      latitude: 23.8103,
+      longitude: 90.4125,
+      date: now,
+    );
+    expect(sehriIftar.sehriEnd.isBefore(sehriIftar.iftarTime), isTrue);
+    expect(DailyInspiration.forDate(now).bangla, isNotEmpty);
   });
 }

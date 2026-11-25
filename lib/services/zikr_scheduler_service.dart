@@ -124,6 +124,14 @@ class ZikrSchedulerService extends ChangeNotifier {
         customTimes: _settings.customPrayerTimes,
       );
 
+  ({DateTime sehriEnd, DateTime iftarTime}) get todaySehriIftar =>
+      _prayerService.getSehriAndIftarTimes(
+        latitude: _settings.latitude,
+        longitude: _settings.longitude,
+        useCustomTimes: _settings.useCustomPrayerTimes,
+        customTimes: _settings.customPrayerTimes,
+      );
+
   Duration get timeUntilNextReminder {
     if (!_settings.isReminderActive || _nextTriggerAt == null) {
       return Duration.zero;
