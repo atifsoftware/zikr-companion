@@ -1,3 +1,43 @@
+class TafsirInfo {
+  final int id;
+  final String nameBangla;
+  final String authorBangla;
+
+  const TafsirInfo({
+    required this.id,
+    required this.nameBangla,
+    required this.authorBangla,
+  });
+
+  static const List<TafsirInfo> presets = [
+    TafsirInfo(
+      id: 164,
+      nameBangla: 'তাফসীর ইবনে কাসীর',
+      authorBangla: 'তাওহীদ পাবলিকেশন',
+    ),
+    TafsirInfo(
+      id: 166,
+      nameBangla: 'তাফসীর আবু বকর যাকারিয়া',
+      authorBangla: 'কিং ফাহাদ কমপ্লেক্স',
+    ),
+    TafsirInfo(
+      id: 165,
+      nameBangla: 'তাফসীর আহসানুল বায়ান',
+      authorBangla: 'বায়ান ফাউন্ডেশন',
+    ),
+    TafsirInfo(
+      id: 381,
+      nameBangla: 'তাফসীর ফাতহুল মাজীদ',
+      authorBangla: 'আবদুর রহমান ইবনে হাসান',
+    ),
+    TafsirInfo(
+      id: 0,
+      nameBangla: 'সংক্ষিপ্ত ব্যাখ্যা (ড. জহুরুল হক)',
+      authorBangla: 'বিল্ট-ইন',
+    ),
+  ];
+}
+
 class QariInfo {
   final String id;
   final String nameBangla;
@@ -16,24 +56,59 @@ class QariInfo {
       nameEnglish: 'Mishary Rashid Alafasy',
     ),
     QariInfo(
+      id: 'qc.3',
+      nameBangla: 'শাইখ আবদুর রহমান আস-সুদাইস',
+      nameEnglish: 'Abdur-Rahman as-Sudais',
+    ),
+    QariInfo(
+      id: 'qc.10',
+      nameBangla: 'শাইখ সাউদ আশ-শুরাইম',
+      nameEnglish: 'Saud ash-Shuraym',
+    ),
+    QariInfo(
       id: 'ar.abdulbasitmurattal',
-      nameBangla: 'শাইখ আব্দুল বাসিত আব্দুস সামাদ',
+      nameBangla: 'শাইখ আব্দুল বাসিত (মুরাত্তাল)',
       nameEnglish: 'Abdul Basit (Murattal)',
     ),
     QariInfo(
+      id: 'qc.1',
+      nameBangla: 'শাইখ আব্দুল বাসিত (মুজাওয়াদ)',
+      nameEnglish: 'Abdul Basit (Mujawwad)',
+    ),
+    QariInfo(
       id: 'ar.minshawi',
-      nameBangla: 'শাইখ মুহাম্মাদ সিদ্দিক আল-মিনশাবি',
-      nameEnglish: 'Al-Minshawi',
+      nameBangla: 'শাইখ আল-মিনশাবি (মুরাত্তাল)',
+      nameEnglish: 'Al-Minshawi (Murattal)',
+    ),
+    QariInfo(
+      id: 'qc.8',
+      nameBangla: 'শাইখ আল-মিনশাবি (মুজাওয়াদ)',
+      nameEnglish: 'Al-Minshawi (Mujawwad)',
     ),
     QariInfo(
       id: 'ar.husary',
-      nameBangla: 'শাইখ মাহমুদ খলিল আল-হুসারি',
+      nameBangla: 'শাইখ আল-হুসারি (মুরাত্তাল)',
       nameEnglish: 'Al-Husary',
     ),
     QariInfo(
+      id: 'qc.12',
+      nameBangla: 'শাইখ আল-হুসারি (মুয়াল্লিম / শিক্ষা)',
+      nameEnglish: 'Al-Husary (Muallim)',
+    ),
+    QariInfo(
       id: 'ar.shaatree',
-      nameBangla: 'শাইখ আবু বকর আল-শাতরি',
+      nameBangla: 'শাইখ আবু বকর আশ-শাতরি',
       nameEnglish: 'Abu Bakr Ash-Shaatree',
+    ),
+    QariInfo(
+      id: 'qc.5',
+      nameBangla: 'শাইখ হানি আর-রিফায়ী',
+      nameEnglish: 'Hani ar-Rifai',
+    ),
+    QariInfo(
+      id: 'qc.11',
+      nameBangla: 'শাইখ মুহাম্মাদ আত-তাবলাভী',
+      nameEnglish: 'Mohamed al-Tablawi',
     ),
     QariInfo(
       id: 'ar.ahmedajamy',

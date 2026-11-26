@@ -1,5 +1,6 @@
-import 'dart:io';
+import '../utils/io_compat.dart';
 import 'dart:math' as math;
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -13,7 +14,7 @@ class IbadahGuideScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Column(
         children: [
           Container(
@@ -29,10 +30,13 @@ class IbadahGuideScreen extends StatelessWidget {
               indicatorColor: AppTheme.emeraldPrimary,
               labelColor: AppTheme.emeraldPrimary,
               unselectedLabelColor: Colors.grey,
+              isScrollable: true,
+              tabAlignment: TabAlignment.center,
               tabs: [
                 Tab(icon: Icon(Icons.explore_rounded), text: 'ক্বিবলা'),
                 Tab(icon: Icon(Icons.water_drop_rounded), text: 'অযু গাইড'),
                 Tab(icon: Icon(Icons.mosque_rounded), text: 'নামাজ গাইড'),
+                Tab(icon: Icon(Icons.record_voice_over_rounded), text: 'তাজবীদ'),
               ],
             ),
           ),
@@ -42,6 +46,7 @@ class IbadahGuideScreen extends StatelessWidget {
                 _QiblaTab(),
                 _WuduTab(),
                 _SalahTab(),
+                _TajweedTab(),
               ],
             ),
           ),
@@ -363,6 +368,176 @@ class _GuideCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TajweedItem {
+  final String title;
+  final String rule;
+  final String arabic;
+  final String assetFile;
+
+  const _TajweedItem({
+    required this.title,
+    required this.rule,
+    required this.arabic,
+    required this.assetFile,
+  });
+}
+
+class _TajweedTab extends StatefulWidget {
+  const _TajweedTab();
+
+  @override
+  State<_TajweedTab> createState() => _TajweedTabState();
+}
+
+class _TajweedTabState extends State<_TajweedTab> {
+  final AudioPlayer _player = AudioPlayer();
+  String? _playingAsset;
+
+  static const List<_TajweedItem> _rules = [
+    _TajweedItem(
+      title: 'তাআউয (আঊযুবিল্লাহ)',
+      rule: 'কুরআন তিলাওয়াত শুরুর আগে শয়তান থেকে আল্লাহর আশ্রয় চাওয়া।',
+      arabic: 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
+      assetFile: 'audio/tajweed/isti3atha.ogg',
+    ),
+    _TajweedItem(
+      title: 'তাসমিয়াহ (বিসমিল্লাহ)',
+      rule: 'প্রত্যেক সূরার শুরুতে (সূরা তাওবা ব্যতীত) আল্লাহর নামে শুরু করা।',
+      arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+      assetFile: 'audio/tajweed/bismillah.ogg',
+    ),
+    _TajweedItem(
+      title: 'গুন্নাহ (নাকের বাঁশি দিয়ে উচ্চারণ)',
+      rule: 'নূন ও মীমে তাশদীদ হলে ১ আলিফ পরিমাণ নাকের বাঁশি দিয়ে গুন্নাহ করে পড়তে হয়।',
+      arabic: 'إِنَّ • ثُمَّ',
+      assetFile: 'audio/tajweed/ghunna.ogg',
+    ),
+    _TajweedItem(
+      title: 'ইদগাম (গুন্নাহসহ)',
+      rule: 'নূন সাকিন বা তানভীনের পর ي ر م ل و ن (يَمْنُو) হরফের চারটি হরফ এলে গুন্নাহসহ মিলিয়ে পড়তে হয়।',
+      arabic: 'مَنْ يَقُولُ • مِنْ وَلِيٍّ',
+      assetFile: 'audio/tajweed/idgham.ogg',
+    ),
+    _TajweedItem(
+      title: 'ইদগাম (গুন্নাহ ছাড়া)',
+      rule: 'নূন সাকিন বা তানভীনের পর ل বা ر এলে গুন্নাহ ছাড়া মিলিয়ে পড়তে হয়।',
+      arabic: 'مِنْ رَبِّهِمْ • هُدًى لِلْمُتَّقِينَ',
+      assetFile: 'audio/tajweed/idghamwg.ogg',
+    ),
+    _TajweedItem(
+      title: 'ইখফা (গোপন করে পড়া)',
+      rule: 'নূন সাকিন বা তানভীনের পর ইখফার ১৫টি হরফ এলে গুন্নাহসহ অস্পষ্ট করে পড়তে হয়।',
+      arabic: 'مِنْ قَبْلُ • كُنْتُمْ',
+      assetFile: 'audio/tajweed/ikhfa.ogg',
+    ),
+    _TajweedItem(
+      title: 'ইকলাব (পরিবর্তন করে পড়া)',
+      rule: 'নূন সাকিন বা তানভীনের পর ب এলে নূনকে মীম-এ পরিবর্তন করে গুন্নাহসহ পড়তে হয়।',
+      arabic: 'مِنْ بَعْدِ • سَمِيعٌ بَصِيرٌ',
+      assetFile: 'audio/tajweed/iqlab.ogg',
+    ),
+    _TajweedItem(
+      title: 'কলকলা (প্রতিধ্বনি)',
+      rule: 'ق ط ب ج د হরফে জযম (সাকিন) হলে ধাক্কা দিয়ে প্রতিধ্বনিসহ উচ্চারণ করতে হয়।',
+      arabic: 'قُلْ هُوَ اللَّهُ أَحَدٌ',
+      assetFile: 'audio/tajweed/qalqala.ogg',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _player.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => _playingAsset = null);
+    });
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  Future<void> _togglePlay(_TajweedItem item) async {
+    if (_playingAsset == item.assetFile) {
+      await _player.stop();
+      if (mounted) setState(() => _playingAsset = null);
+      return;
+    }
+    try {
+      await _player.stop();
+      setState(() => _playingAsset = item.assetFile);
+      await _player.play(AssetSource(item.assetFile));
+    } catch (_) {
+      if (mounted) setState(() => _playingAsset = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: _rules.length,
+      itemBuilder: (context, index) {
+        final item = _rules[index];
+        final isPlaying = _playingAsset == item.assetFile;
+        return Card(
+          margin: const EdgeInsets.only(bottom: 14),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.emeraldLight,
+                            ),
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: () => _togglePlay(item),
+                      icon: Icon(isPlaying
+                          ? Icons.stop_rounded
+                          : Icons.volume_up_rounded),
+                      label: Text(isPlaying ? 'থামান' : 'শুনুন'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: isPlaying
+                            ? AppTheme.goldAccent
+                            : AppTheme.emeraldPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  item.arabic,
+                  textAlign: TextAlign.right,
+                  textDirection: TextDirection.rtl,
+                  style: const TextStyle(
+                    fontFamily: AppTheme.arabicFontFamily,
+                    fontSize: 26,
+                    height: 1.9,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item.rule,
+                  style: const TextStyle(fontSize: 14, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

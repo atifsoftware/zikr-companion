@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import '../utils/io_compat.dart';
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -18,7 +18,14 @@ class ZikrVoiceService {
   Process? _windowsSpeechProcess;
 
   Future<void> init() async {
-    if (_initialized || kIsWeb) return;
+    if (_initialized) return;
+    if (kIsWeb) {
+      try {
+        _tts ??= FlutterTts();
+      } catch (_) {}
+      _initialized = true;
+      return;
+    }
     if (Platform.isWindows) {
       _initialized = true;
       return;
@@ -67,16 +74,27 @@ class ZikrVoiceService {
 
     final count = repeatCount < 1 ? 1 : repeatCount;
 
-    if (item.customAudioPath.isNotEmpty &&
-        File(item.customAudioPath).existsSync()) {
-      await _playAudioSource(
-        DeviceFileSource(item.customAudioPath),
-        repeatCount: count,
-        speechRate: speechRate,
-        onRepetitionDone: onRepetitionDone,
-      );
-      if (!_isCancelled) onCompleted?.call();
-      return;
+    if (item.customAudioPath.isNotEmpty) {
+      if (item.customAudioPath.startsWith('http://') ||
+          item.customAudioPath.startsWith('https://')) {
+        await _playAudioSource(
+          UrlSource(item.customAudioPath),
+          repeatCount: count,
+          speechRate: speechRate,
+          onRepetitionDone: onRepetitionDone,
+        );
+        if (!_isCancelled) onCompleted?.call();
+        return;
+      } else if (!kIsWeb && File(item.customAudioPath).existsSync()) {
+        await _playAudioSource(
+          DeviceFileSource(item.customAudioPath),
+          repeatCount: count,
+          speechRate: speechRate,
+          onRepetitionDone: onRepetitionDone,
+        );
+        if (!_isCancelled) onCompleted?.call();
+        return;
+      }
     }
 
     if (!item.isCustom && await _hasBundledAudio(item.id)) {
@@ -122,7 +140,9 @@ class ZikrVoiceService {
     for (var i = 0; i < repeatCount; i++) {
       if (_isCancelled) break;
       try {
-        await _audioPlayer.setPlaybackRate(playbackRate);
+        try {
+          await _audioPlayer.setPlaybackRate(playbackRate);
+        } catch (_) {}
         final completed = _audioPlayer.onPlayerComplete.first;
         await _audioPlayer.play(source);
         await completed.timeout(const Duration(minutes: 5));

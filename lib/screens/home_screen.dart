@@ -376,8 +376,27 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        if (scheduler.activeAnnouncement != null) ...[
+          Card(
+            color: AppTheme.emeraldPrimary.withValues(alpha: 0.08),
+            child: ListTile(
+              leading: const Icon(Icons.notifications_active_rounded,
+                  color: AppTheme.goldAccent),
+              title: Text(
+                scheduler.activeAnnouncement!.title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(scheduler.activeAnnouncement!.body),
+              trailing: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: scheduler.dismissAnnouncement,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         _DailyInspirationCard(
-          inspiration: DailyInspiration.forDate(DateTime.now()),
+          items: scheduler.inspirations,
         ),
       ],
     );
@@ -511,27 +530,28 @@ class _RamadanFastingCard extends StatelessWidget {
 }
 
 class _DailyInspirationCard extends StatefulWidget {
-  final DailyInspiration inspiration;
+  final List<DailyInspiration> items;
 
-  const _DailyInspirationCard({required this.inspiration});
+  const _DailyInspirationCard({required this.items});
 
   @override
   State<_DailyInspirationCard> createState() => _DailyInspirationCardState();
 }
 
 class _DailyInspirationCardState extends State<_DailyInspirationCard> {
-  late int _currentIndex =
-      DailyInspiration.items.indexOf(widget.inspiration).clamp(0, DailyInspiration.items.length - 1);
+  int _currentIndex = 0;
 
   void _nextInspiration() {
+    if (widget.items.isEmpty) return;
     setState(() {
-      _currentIndex = (_currentIndex + 1) % DailyInspiration.items.length;
+      _currentIndex = (_currentIndex + 1) % widget.items.length;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final inspiration = DailyInspiration.items[_currentIndex];
+    final list = widget.items.isNotEmpty ? widget.items : DailyInspiration.items;
+    final inspiration = list[_currentIndex % list.length];
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'screens/dua_screen.dart';
+import 'screens/hadith_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/ibadah_guide_screen.dart';
 import 'screens/prayer_times_screen.dart';
@@ -13,6 +14,7 @@ import 'services/desktop_tray_service.dart';
 import 'services/quran_player_service.dart';
 import 'services/zikr_scheduler_service.dart';
 import 'theme/app_theme.dart';
+import 'widgets/splash_overlay.dart';
 import 'widgets/zikr_reminder_dialog.dart';
 
 class ZikrApp extends StatefulWidget {
@@ -26,6 +28,7 @@ class _ZikrAppState extends State<ZikrApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   int _selectedIndex = 0;
   bool _isReminderDialogOpen = false;
+  bool _showSplash = true;
 
   late final List<Widget> _screens = [
     HomeScreen(
@@ -40,6 +43,7 @@ class _ZikrAppState extends State<ZikrApp> {
     const PrayerTimesScreen(),
     const IbadahGuideScreen(),
     const SettingsScreen(),
+    const HadithScreen(),
   ];
 
   static const _titles = [
@@ -51,6 +55,7 @@ class _ZikrAppState extends State<ZikrApp> {
     'নামাজের সময়সূচি',
     'ক্বিবলা ও আমল গাইড',
     'সেটিংস',
+    'সহীহ হাদিস',
   ];
 
   // Mobile bottom nav maps 5 primary tabs -> _screens indices.
@@ -118,6 +123,19 @@ class _ZikrAppState extends State<ZikrApp> {
           );
         }
       };
+      scheduler.onServerNotification = (notif) async {
+        await DesktopTrayService.instance.bringToFront();
+        final ctx = _navigatorKey.currentContext;
+        if (ctx != null && ctx.mounted) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(
+              content: Text('${notif.title}: ${notif.body}'),
+              backgroundColor: AppTheme.emeraldPrimary,
+              duration: const Duration(seconds: 8),
+            ),
+          );
+        }
+      };
     });
   }
 
@@ -147,7 +165,17 @@ class _ZikrAppState extends State<ZikrApp> {
           data: mq.copyWith(
             textScaler: TextScaler.linear(effectiveScale),
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: Stack(
+            children: [
+              child ?? const SizedBox.shrink(),
+              if (_showSplash)
+                SplashOverlay(
+                  onFinished: () {
+                    if (mounted) setState(() => _showSplash = false);
+                  },
+                ),
+            ],
+          ),
         );
       },
       home: CallbackShortcuts(
@@ -193,6 +221,18 @@ class _ZikrAppState extends State<ZikrApp> {
                       ],
                     ),
                     actions: [
+                      IconButton(
+                        tooltip: 'সহীহ হাদিস',
+                        icon: Icon(
+                          _selectedIndex == 8
+                              ? Icons.auto_stories_rounded
+                              : Icons.auto_stories_outlined,
+                          color: _selectedIndex == 8
+                              ? AppTheme.emeraldLight
+                              : null,
+                        ),
+                        onPressed: () => setState(() => _selectedIndex = 8),
+                      ),
                       IconButton(
                         tooltip: 'মাসনূন দোয়া',
                         icon: Icon(
@@ -323,6 +363,11 @@ class _ZikrAppState extends State<ZikrApp> {
                         icon: Icon(Icons.settings_outlined),
                         selectedIcon: Icon(Icons.settings_rounded),
                         label: Text('সেটিংস'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.auto_stories_outlined),
+                        selectedIcon: Icon(Icons.auto_stories_rounded),
+                        label: Text('সহীহ হাদিস'),
                       ),
                     ],
                     trailing: Expanded(

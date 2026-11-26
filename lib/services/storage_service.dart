@@ -1,12 +1,18 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
+import '../models/daily_inspiration.dart';
 import '../models/zikr_item.dart';
+import '../screens/dua_screen.dart';
 
 class StorageService {
   static const _settingsKey = 'zikr_app_settings';
   static const _zikrListKey = 'zikr_items_list';
   static const _dailyHistoryKey = 'zikr_daily_history';
+  static const _remoteInspirationsKey = 'zikr_remote_inspirations';
+  static const _remoteDuasKey = 'zikr_remote_duas';
+  static const _lastNotifIdKey = 'zikr_last_remote_notif_id';
+  static const _deviceIdKey = 'zikr_device_unique_id';
 
   final SharedPreferences _prefs;
 
@@ -91,6 +97,105 @@ class StorageService {
 
   static String dateKey(DateTime dt) {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+
+  List<DailyInspiration> loadRemoteInspirations() {
+    final raw = _prefs.getString(_remoteInspirationsKey);
+    if (raw == null) return const [];
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      return decoded
+          .whereType<Map<String, dynamic>>()
+          .map(
+            (m) => DailyInspiration(
+              arabic: (m['arabic'] as String?) ?? '',
+              bangla: (m['bangla'] as String?) ?? '',
+              reference: (m['reference'] as String?) ?? '',
+            ),
+          )
+          .where((e) => e.bangla.isNotEmpty)
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> saveRemoteInspirations(List<DailyInspiration> list) async {
+    await _prefs.setString(
+      _remoteInspirationsKey,
+      jsonEncode(
+        list
+            .map(
+              (e) => {
+                'arabic': e.arabic,
+                'bangla': e.bangla,
+                'reference': e.reference,
+              },
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  List<DuaItem> loadRemoteDuas() {
+    final raw = _prefs.getString(_remoteDuasKey);
+    if (raw == null) return const [];
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      return decoded
+          .whereType<Map<String, dynamic>>()
+          .map(
+            (m) => DuaItem(
+              category: (m['category'] as String?) ?? 'মাসনুন দোয়া',
+              title: (m['title'] as String?) ?? '',
+              arabic: (m['arabic'] as String?) ?? '',
+              banglaPronunciation: (m['bangla_pronunciation'] as String?) ?? '',
+              banglaMeaning: (m['bangla_meaning'] as String?) ?? '',
+              reference: (m['reference'] as String?) ?? '',
+              audioUrl: (m['audio_url'] as String?) ?? '',
+            ),
+          )
+          .where((e) => e.title.isNotEmpty && e.arabic.isNotEmpty)
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> saveRemoteDuas(List<DuaItem> list) async {
+    await _prefs.setString(
+      _remoteDuasKey,
+      jsonEncode(
+        list
+            .map(
+              (e) => {
+                'category': e.category,
+                'title': e.title,
+                'arabic': e.arabic,
+                'bangla_pronunciation': e.banglaPronunciation,
+                'bangla_meaning': e.banglaMeaning,
+                'reference': e.reference,
+                'audio_url': e.audioUrl,
+              },
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  int loadLastNotificationId() => _prefs.getInt(_lastNotifIdKey) ?? 0;
+
+  Future<void> saveLastNotificationId(int id) async {
+    await _prefs.setInt(_lastNotifIdKey, id);
+  }
+
+  Future<String> getOrCreateDeviceId() async {
+    final existing = _prefs.getString(_deviceIdKey);
+    if (existing != null && existing.isNotEmpty) return existing;
+    final generated =
+        'zk_${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}';
+    await _prefs.setString(_deviceIdKey, generated);
+    return generated;
   }
 
   String exportBackupJson() {

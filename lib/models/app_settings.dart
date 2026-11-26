@@ -62,7 +62,7 @@ class AppSettings {
     this.arabicFontFamily = 'Lateef',
     this.showRamadanCard = true,
     this.cityName = 'ঢাকা (Dhaka)',
-    this.serverUrl = '',
+    this.serverUrl = 'https://zikr-companion.nexterp.bd',
     this.latitude = 23.8103,
     this.longitude = 90.4125,
   });
@@ -208,7 +208,9 @@ class AppSettings {
       arabicFontFamily: (json['arabicFontFamily'] as String?) ?? 'Lateef',
       showRamadanCard: (json['showRamadanCard'] as bool?) ?? true,
       cityName: (json['cityName'] as String?) ?? 'ঢাকা (Dhaka)',
-      serverUrl: (json['serverUrl'] as String?) ?? '',
+      serverUrl: ((json['serverUrl'] as String?)?.trim().isNotEmpty ?? false)
+          ? (json['serverUrl'] as String).trim()
+          : 'https://zikr-companion.nexterp.bd',
       latitude: (json['latitude'] as num?)?.toDouble() ?? 23.8103,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 90.4125,
     );

@@ -1,11 +1,13 @@
 import 'dart:async';
-import 'dart:io';
+import '../utils/io_compat.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import '../models/app_settings.dart';
+import '../models/daily_inspiration.dart';
 import '../models/zikr_item.dart';
+import '../screens/dua_screen.dart';
 import 'desktop_tray_service.dart';
 import 'hijri_service.dart';
 import 'prayer_service.dart';
@@ -30,6 +32,11 @@ class ZikrSchedulerService extends ChangeNotifier {
 
   AppSettings _settings;
   List<ZikrItem> _zikrList;
+  List<DailyInspiration> _remoteInspirations = const [];
+  List<DuaItem> _remoteDuas = const [];
+  RemoteNotification? _activeAnnouncement;
+  int _lastSeenNotifId = 0;
+  Timer? _autoSyncTimer;
   int _todayCount;
   Map<String, int> _history;
   int _currentIndex = 0;
@@ -47,15 +54,52 @@ class ZikrSchedulerService extends ChangeNotifier {
   VoidCallback? onReminderAutoClose;
   void Function(PrayerSlot prayer, int minutesLeft)? onPrePrayerAlert;
   void Function(PrayerSlot prayer)? onAzanAlert;
+  void Function(RemoteNotification notification)? onServerNotification;
 
   ZikrSchedulerService(this._storage)
       : _settings = _storage.loadSettings(),
         _zikrList = _storage.loadZikrList(),
+        _remoteInspirations = _storage.loadRemoteInspirations(),
+        _remoteDuas = _storage.loadRemoteDuas(),
+        _lastSeenNotifId = _storage.loadLastNotificationId(),
         _history = _storage.loadDailyHistory(),
         _todayCount = _storage.loadTodayCount() {
     _initNotifications();
     _rescheduleNext();
     _startTicker();
+    _startAutoSync();
+  }
+
+  List<DailyInspiration> get inspirations =>
+      _remoteInspirations.isNotEmpty ? _remoteInspirations : DailyInspiration.items;
+
+  List<DuaItem> get duas =>
+      _remoteDuas.isNotEmpty ? _remoteDuas : DuaItem.allDuas;
+
+  RemoteNotification? get activeAnnouncement => _activeAnnouncement;
+
+  void dismissAnnouncement() {
+    _activeAnnouncement = null;
+    notifyListeners();
+  }
+
+  void _startAutoSync() {
+    unawaited(_tryAutoSync());
+    _autoSyncTimer?.cancel();
+    _autoSyncTimer = Timer.periodic(
+      const Duration(minutes: 30),
+      (_) => unawaited(_tryAutoSync()),
+    );
+  }
+
+  Future<void> _tryAutoSync() async {
+    final url = _settings.serverUrl.trim();
+    if (url.isEmpty) return;
+    try {
+      await syncFromServer(url, saveUrl: false);
+    } catch (_) {
+      // Offline-safe: silently keep cached data
+    }
   }
 
   AppSettings get settings => _settings;
@@ -448,22 +492,95 @@ class ZikrSchedulerService extends ChangeNotifier {
 
   String exportBackupJson() => _storage.exportBackupJson();
 
-  Future<int> syncFromServer(String url) async {
+  Future<int> syncFromServer(String url, {bool saveUrl = true}) async {
     final clean = url.trim();
-    await updateSettings(_settings.copyWith(serverUrl: clean));
-    final remoteItems = await RemoteSyncService().fetchAndCacheZikrs(clean);
-    if (remoteItems.isEmpty) return 0;
-
-    final existingIds = _zikrList.map((e) => e.id).toSet();
-    final newItems =
-        remoteItems.where((r) => !existingIds.contains(r.id)).toList();
-    if (newItems.isNotEmpty) {
-      _zikrList = [..._zikrList, ...newItems];
-      await _storage.saveZikrList(_zikrList);
-      await _scheduleBackgroundReminders();
-      notifyListeners();
+    if (saveUrl) {
+      await updateSettings(_settings.copyWith(serverUrl: clean));
     }
-    return newItems.length;
+    final deviceId = await _storage.getOrCreateDeviceId();
+    final result = await RemoteSyncService().fetchAll(clean, deviceId: deviceId);
+    var changedCount = 0;
+
+    if (result.zikrs.isNotEmpty) {
+      final byId = <String, ZikrItem>{for (final z in _zikrList) z.id: z};
+      final updatedList = List<ZikrItem>.from(_zikrList);
+
+      for (final remote in result.zikrs) {
+        final existing = byId[remote.id];
+        if (existing == null) {
+          updatedList.add(remote);
+          changedCount++;
+        } else if (!existing.isCustom) {
+          final merged = existing.copyWith(
+            arabic: remote.arabic,
+            banglaPronunciation: remote.banglaPronunciation,
+            englishPhonetic: remote.englishPhonetic,
+            banglaMeaning: remote.banglaMeaning,
+            virtue: remote.virtue,
+            repeatCount: remote.repeatCount,
+            clearRepeatCount: remote.repeatCount == null,
+            customAudioPath: remote.customAudioPath.isNotEmpty
+                ? remote.customAudioPath
+                : existing.customAudioPath,
+          );
+          if (merged.arabic != existing.arabic ||
+              merged.banglaPronunciation != existing.banglaPronunciation ||
+              merged.banglaMeaning != existing.banglaMeaning ||
+              merged.repeatCount != existing.repeatCount ||
+              merged.customAudioPath != existing.customAudioPath) {
+            final idx = updatedList.indexWhere((e) => e.id == remote.id);
+            if (idx != -1) updatedList[idx] = merged;
+            changedCount++;
+          }
+        }
+      }
+
+      if (changedCount > 0) {
+        _zikrList = updatedList;
+        await _storage.saveZikrList(_zikrList);
+        await _scheduleBackgroundReminders();
+      }
+    }
+
+    if (result.inspirations.isNotEmpty) {
+      _remoteInspirations = result.inspirations;
+      await _storage.saveRemoteInspirations(_remoteInspirations);
+    }
+
+    if (result.duas.isNotEmpty) {
+      _remoteDuas = result.duas;
+      await _storage.saveRemoteDuas(_remoteDuas);
+    }
+
+    if (result.notifications.isNotEmpty) {
+      final latest = result.notifications.first;
+      if (latest.id > _lastSeenNotifId) {
+        _lastSeenNotifId = latest.id;
+        _activeAnnouncement = latest;
+        await _storage.saveLastNotificationId(latest.id);
+        onServerNotification?.call(latest);
+        await _showServerNotification(latest);
+      }
+    }
+
+    notifyListeners();
+    return changedCount;
+  }
+
+  Future<void> _showServerNotification(RemoteNotification notif) async {
+    if (!_notificationsInitialized || kIsWeb || Platform.isWindows) return;
+    try {
+      const details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          'zikr_server_announcements',
+          'Zikr Announcements',
+          channelDescription: 'ওয়েব অ্যাডমিন থেকে পাঠানো নোটিফিকেশন',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+      );
+      await _notifications.show(9000 + (notif.id % 900), notif.title, notif.body, details);
+    } catch (_) {}
   }
 
   Future<bool> importBackupJson(String raw) async {

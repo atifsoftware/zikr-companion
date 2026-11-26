@@ -18,6 +18,7 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
   bool _showTafsir = false;
+  bool _showWordByWord = false;
   int _lastScrolledAyah = -1;
   List<GlobalKey> _ayahKeys = [];
 
@@ -238,6 +239,8 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                 onSelected: (val) {
                   if (val == 'tafsir') {
                     setState(() => _showTafsir = !_showTafsir);
+                  } else if (val == 'wbw') {
+                    setState(() => _showWordByWord = !_showWordByWord);
                   } else if (val == 'qari') {
                     _openMobileQariPicker(context, player);
                   }
@@ -246,6 +249,11 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                   PopupMenuItem(
                     value: 'qari',
                     child: Text('ক্বারী: ${player.selectedQari.nameBangla}'),
+                  ),
+                  CheckedPopupMenuItem(
+                    value: 'wbw',
+                    checked: _showWordByWord,
+                    child: const Text('শব্দে শব্দে (Word-by-Word)'),
                   ),
                   CheckedPopupMenuItem(
                     value: 'tafsir',
@@ -618,6 +626,13 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const Text('শব্দে শব্দে', style: TextStyle(fontSize: 12)),
+                    Switch(
+                      value: _showWordByWord,
+                      activeColor: AppTheme.emeraldPrimary,
+                      onChanged: (v) => setState(() => _showWordByWord = v),
+                    ),
+                    const SizedBox(width: 8),
                     const Text('তাফসির / ব্যাখ্যা',
                         style: TextStyle(fontSize: 12)),
                     Switch(
@@ -627,6 +642,54 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                     ),
                   ],
                 ),
+              ],
+            ),
+          ),
+        if (_showTafsir)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Row(
+              children: [
+                const Icon(Icons.menu_book_rounded,
+                    size: 18, color: AppTheme.emeraldPrimary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    value: player.selectedTafsir.id,
+                    isDense: true,
+                    decoration: InputDecoration(
+                      labelText: 'তাফসীর নির্বাচন করুন',
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    items: TafsirInfo.presets
+                        .map((t) => DropdownMenuItem<int>(
+                              value: t.id,
+                              child: Text(
+                                '${t.nameBangla} (${t.authorBangla})',
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val == null) return;
+                      final chosen = TafsirInfo.presets
+                          .firstWhere((t) => t.id == val);
+                      player.setTafsir(chosen);
+                    },
+                  ),
+                ),
+                if (player.isLoadingTafsir) ...[
+                  const SizedBox(width: 10),
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ],
               ],
             ),
           ),
@@ -698,15 +761,55 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
-                                      child: Text(
-                                        ayah.arabic,
-                                        textAlign: TextAlign.right,
-                                        textDirection: TextDirection.rtl,
-                                        style: TextStyle(
-                                          fontFamily: arabicFont,
-                                          fontSize: arabicFont == 'Lateef' ? 32 : 28,
-                                          height: 1.95,
-                                        ),
+                                      child: Builder(
+                                        builder: (_) {
+                                          final activeWordIdx = isHighlighted
+                                              ? player.activeWordIndexFor(ayah)
+                                              : -1;
+                                          final baseStyle = TextStyle(
+                                            fontFamily: arabicFont,
+                                            fontSize: arabicFont == 'Lateef'
+                                                ? 32
+                                                : 28,
+                                            height: 1.95,
+                                          );
+                                          if (ayah.words.isEmpty) {
+                                            return Text(
+                                              ayah.arabic,
+                                              textAlign: TextAlign.right,
+                                              textDirection: TextDirection.rtl,
+                                              style: baseStyle,
+                                            );
+                                          }
+                                          return Text.rich(
+                                            TextSpan(
+                                              style: baseStyle,
+                                              children: List.generate(
+                                                ayah.words.length,
+                                                (wIdx) {
+                                                  final w = ayah.words[wIdx];
+                                                  final active =
+                                                      wIdx == activeWordIdx;
+                                                  return TextSpan(
+                                                    text: wIdx ==
+                                                            ayah.words.length -
+                                                                1
+                                                        ? w.ar
+                                                        : '${w.ar} ',
+                                                    style: active
+                                                        ? const TextStyle(
+                                                            color: AppTheme
+                                                                .goldAccent,
+                                                          )
+                                                        : null,
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                            textAlign: TextAlign.right,
+                                            textDirection: TextDirection.rtl,
+                                          );
+                                        },
                                       ),
                                     ),
                                   ],
@@ -724,42 +827,142 @@ class _QuranRecitationScreenState extends State<QuranRecitationScreen> {
                                         height: 1.6,
                                       ),
                                 ),
-                                if (_showTafsir &&
-                                    ayah.banglaTafsir.isNotEmpty &&
-                                    ayah.banglaTafsir !=
-                                        ayah.banglaTranslation) ...[
-                                  const SizedBox(height: 10),
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          AppTheme.goldAccent.withOpacity(0.10),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'ব্যাখ্যামূলক অনুবাদ (ড. জহুরুল হক):',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppTheme.emeraldLight,
-                                          ),
+                                if (_showWordByWord &&
+                                    ayah.words.isNotEmpty) ...[
+                                  const SizedBox(height: 12),
+                                  Builder(
+                                    builder: (_) {
+                                      final activeWordIdx = isHighlighted
+                                          ? player.activeWordIndexFor(ayah)
+                                          : -1;
+                                      return Directionality(
+                                        textDirection: TextDirection.rtl,
+                                        child: Wrap(
+                                          spacing: 8,
+                                          runSpacing: 8,
+                                          children: List.generate(
+                                              ayah.words.length, (wIdx) {
+                                            final w = ayah.words[wIdx];
+                                            final isWordActive =
+                                                wIdx == activeWordIdx;
+                                            return AnimatedContainer(
+                                              duration: const Duration(
+                                                  milliseconds: 180),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 8),
+                                              decoration: BoxDecoration(
+                                                color: isWordActive
+                                                    ? AppTheme.goldAccent
+                                                        .withValues(alpha: 0.24)
+                                                    : AppTheme.emeraldPrimary
+                                                        .withValues(
+                                                            alpha: 0.06),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                border: Border.all(
+                                                  color: isWordActive
+                                                      ? AppTheme.goldAccent
+                                                      : AppTheme.emeraldPrimary
+                                                          .withValues(
+                                                              alpha: 0.16),
+                                                  width:
+                                                      isWordActive ? 1.6 : 1.0,
+                                                ),
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (w.ar.isNotEmpty)
+                                                    Text(
+                                                      w.ar,
+                                                      textDirection:
+                                                          TextDirection.rtl,
+                                                      style: TextStyle(
+                                                        fontFamily: arabicFont,
+                                                        fontSize: 21,
+                                                        height: 1.5,
+                                                        fontWeight: isWordActive
+                                                            ? FontWeight.bold
+                                                            : FontWeight.normal,
+                                                      ),
+                                                    ),
+                                                  Text(
+                                                    w.bn,
+                                                    textDirection:
+                                                        TextDirection.ltr,
+                                                    style: TextStyle(
+                                                      fontSize: 11.5,
+                                                      color: isWordActive
+                                                          ? AppTheme
+                                                              .emeraldPrimary
+                                                          : AppTheme
+                                                              .emeraldLight,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }),
                                         ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          ayah.banglaTafsir,
-                                          style: const TextStyle(
-                                            fontFamily:
-                                                AppTheme.banglaSerifFontFamily,
-                                            fontSize: 14,
-                                            height: 1.55,
+                                      );
+                                    },
+                                  ),
+                                ],
+                                if (_showTafsir) ...[
+                                  Builder(
+                                    builder: (_) {
+                                      final tafsirTxt =
+                                          player.tafsirForAyah(ayah);
+                                      if (tafsirTxt.isEmpty ||
+                                          tafsirTxt == ayah.banglaTranslation) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          const SizedBox(height: 10),
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.goldAccent
+                                                  .withValues(alpha: 0.10),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  '${player.selectedTafsir.nameBangla}:',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        AppTheme.emeraldLight,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  tafsirTxt,
+                                                  style: const TextStyle(
+                                                    fontFamily: AppTheme
+                                                        .banglaSerifFontFamily,
+                                                    fontSize: 14,
+                                                    height: 1.55,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ],
                               ],
